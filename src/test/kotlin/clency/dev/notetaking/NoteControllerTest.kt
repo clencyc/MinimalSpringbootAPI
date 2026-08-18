@@ -15,6 +15,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import tools.jackson.databind.ObjectMapper
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -50,8 +51,8 @@ class NoteControllerTest {
         // Fluent builder style chains methods with dots directly instead of code blocks
         mockMvc.perform(
             post("/notes")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(note))
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(note))
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.title").value("Groceries"))
@@ -72,6 +73,21 @@ class NoteControllerTest {
 
         mockMvc.delete("/notes/missing").andExpect {
             status { isNotFound() }
+        }
+    }
+
+//    more tests on the patch layer
+@Test
+    fun `PATCH notes updates a note`() {
+        val updated = Note(id = "1", title = "Groceries v2", description = "Milk, eggs, bread")
+        every { service.patchNote(updated) } returns updated
+
+        mockMvc.patch("/notes") {
+//            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(updated)
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.title") { value("Groceries v2") }
         }
     }
 }
